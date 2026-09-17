@@ -51,14 +51,11 @@ export default function Toast({ message, type = 'success', onClose }) {
     <div className="toast-container">
       <div className={`toast toast-${type}`}>
         {type === 'success' && <CheckCircle size={16} />}
-        {type === 'error'   && <XCircle size={16} />}
-        {type === 'info'    && <Info size={16} />}
+        {type === 'error' && <XCircle size={16} />}
+        {type === 'info' && <Info size={16} />}
         <span style={{ flex: 1 }}>{message}</span>
         {onClose && (
-          <button
-            onClick={onClose}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: 0 }}
-          >
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: 0 }}>
             <X size={14} />
           </button>
         )}

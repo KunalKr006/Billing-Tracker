@@ -1,13 +1,11 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
 
 
 class ClientBase(BaseModel):
     name: str
-    email: Optional[str] = None
-    phone: Optional[str] = None
-    notes: Optional[str] = None
+    phone: str = Field(min_length=3, max_length=50)
     is_active: bool = True
 
 
@@ -17,9 +15,7 @@ class ClientCreate(ClientBase):
 
 class ClientUpdate(BaseModel):
     name: Optional[str] = None
-    email: Optional[str] = None
-    phone: Optional[str] = None
-    notes: Optional[str] = None
+    phone: Optional[str] = Field(default=None, min_length=3, max_length=50)
     is_active: Optional[bool] = None
 
 

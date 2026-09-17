@@ -4,6 +4,7 @@ from sqlalchemy import extract, func
 from typing import List, Optional
 from app.database import get_db
 from app.models.payment import Payment
+from app.models.client import Client
 from app.schemas.payment import PaymentCreate, PaymentUpdate, PaymentResponse
 
 router = APIRouter(prefix="/api/payments", tags=["payments"])
@@ -28,6 +29,8 @@ def list_payments(
 
 @router.post("", response_model=PaymentResponse, status_code=201)
 def create_payment(payload: PaymentCreate, db: Session = Depends(get_db)):
+    if not db.query(Client).filter(Client.id == payload.client_id).first():
+        raise HTTPException(status_code=404, detail="Client not found")
     data = payload.model_dump()
     if not data.get("for_month") and data.get("payment_date"):
         data["for_month"] = data["payment_date"].month
@@ -53,7 +56,13 @@ def update_payment(payment_id: int, payload: PaymentUpdate, db: Session = Depend
     payment = db.query(Payment).filter(Payment.id == payment_id).first()
     if not payment:
         raise HTTPException(status_code=404, detail="Payment not found")
-    for field, value in payload.model_dump(exclude_unset=True).items():
+    changes = payload.model_dump(exclude_unset=True)
+    if "payment_date" in changes:
+        if "for_month" not in changes:
+            changes["for_month"] = changes["payment_date"].month
+        if "for_year" not in changes:
+            changes["for_year"] = changes["payment_date"].year
+    for field, value in changes.items():
         setattr(payment, field, value)
     db.commit()
     db.refresh(payment)

@@ -7,23 +7,26 @@ import { useToast } from '../components/Toast';
 
 // ── Client Form Modal ──────────────────────────────────────────────────────────
 function ClientModal({ isOpen, onClose, onSubmit, initial = null }) {
-  const [form, setForm] = useState({ name: '', email: '', phone: '', notes: '', is_active: true });
+  const [form, setForm] = useState({ name: '', phone: '', is_active: true });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      setForm(initial ? { name: initial.name, email: initial.email || '', phone: initial.phone || '', notes: initial.notes || '', is_active: initial.is_active } : { name: '', email: '', phone: '', notes: '', is_active: true });
+      setForm(initial ? { name: initial.name, phone: initial.phone || '', is_active: initial.is_active } : { name: '', phone: '', is_active: true });
       setErrors({});
     }
   }, [isOpen, initial]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name.trim()) { setErrors({ name: 'Name is required' }); return; }
+    const validationErrors = {};
+    if (!form.name.trim()) validationErrors.name = 'Name is required';
+    if (!form.phone.trim()) validationErrors.phone = 'Phone number is required';
+    if (Object.keys(validationErrors).length) { setErrors(validationErrors); return; }
     setLoading(true);
     try {
-      await onSubmit({ ...form, name: form.name.trim() });
+      await onSubmit({ name: form.name.trim(), phone: form.phone.trim(), is_active: form.is_active });
       onClose();
     } catch (err) {
       setErrors({ submit: err.response?.data?.detail || 'Failed to save' });
@@ -46,19 +49,10 @@ function ClientModal({ isOpen, onClose, onSubmit, initial = null }) {
               <input className="form-input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Client name" />
               {errors.name && <div className="form-error">{errors.name}</div>}
             </div>
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Email</label>
-                <input type="email" className="form-input" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="email@example.com" />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Phone</label>
-                <input className="form-input" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="+91 ..." />
-              </div>
-            </div>
             <div className="form-group">
-              <label className="form-label">Notes</label>
-              <textarea className="form-textarea" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="Optional notes..." />
+              <label className="form-label">Phone number *</label>
+              <input className="form-input" value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="+91 ..." />
+              {errors.phone && <div className="form-error">{errors.phone}</div>}
             </div>
             <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <input type="checkbox" id="client-active" checked={form.is_active} onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))} />
@@ -203,7 +197,7 @@ export default function Settings({ setSidebarOpen }) {
                       {!c.is_active && <span className="badge badge-gray" style={{ marginLeft: 8, fontSize: '0.65rem' }}>Inactive</span>}
                     </div>
                     <div className="settings-row-sub">
-                      {[c.email, c.phone].filter(Boolean).join(' · ') || 'No contact info'}
+                      {c.phone || 'No phone number'}
                     </div>
                   </div>
                   <div className="settings-row-actions">

@@ -40,9 +40,7 @@ def seed():
         # Client
         client = Client(
             name="Influencer Client",
-            email="influencer@example.com",
             phone="+91 9999999999",
-            notes="Main client - pays monthly for editing work",
             is_active=True,
         )
         db.add(client)

@@ -16,6 +16,8 @@ from collections import defaultdict
 
 
 def get_month_name(month: int) -> str:
+    if month < 1 or month > 12:
+        raise ValueError("Month must be between 1 and 12")
     return month_name[month]
 
 
@@ -66,7 +68,7 @@ def compute_billing(db: Session, client_id: int, year: int, month: int) -> Billi
             for e in entries
             if e.category_id == cat_id
         )
-        rate_per_item = Decimal(str(entries[[e.category_id for e in entries].index(cat_id)].rate))
+        rate_per_item = subtotal / count
         total_bill += subtotal
 
         categories.append(

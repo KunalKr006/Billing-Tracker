@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from app.database import get_db
 from app.models.category import Category
+from app.models.work_entry import WorkEntry
 from app.schemas.category import CategoryCreate, CategoryUpdate, CategoryResponse
 
 router = APIRouter(prefix="/api/categories", tags=["categories"])
@@ -54,5 +55,7 @@ def delete_category(category_id: int, db: Session = Depends(get_db)):
     category = db.query(Category).filter(Category.id == category_id).first()
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
+    if db.query(WorkEntry).filter(WorkEntry.category_id == category_id).first():
+        raise HTTPException(status_code=409, detail="Cannot delete a category with work entries")
     db.delete(category)
     db.commit()

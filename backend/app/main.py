@@ -5,7 +5,6 @@ import os
 
 load_dotenv(override=True)
 
-from app.database import engine, Base
 from app.models import Client, Category, WorkEntry, Payment  # noqa: F401 - register models
 
 from app.routers import (
@@ -16,9 +15,6 @@ from app.routers import (
     billing_router,
     dashboard_router,
 )
-
-# Create all tables if they don't exist
-Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Ledger API",

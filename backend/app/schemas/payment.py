@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 from datetime import datetime, date
 from decimal import Decimal
@@ -9,8 +9,8 @@ class PaymentBase(BaseModel):
     client_id: int
     amount: Decimal
     payment_date: date
-    for_month: Optional[int] = None
-    for_year: Optional[int] = None
+    for_month: Optional[int] = Field(None, ge=1, le=12)
+    for_year: Optional[int] = Field(None, ge=2000, le=2200)
     payment_method: PaymentMethod = PaymentMethod.upi
     notes: Optional[str] = None
 
@@ -29,8 +29,8 @@ class PaymentCreate(PaymentBase):
 class PaymentUpdate(BaseModel):
     amount: Optional[Decimal] = None
     payment_date: Optional[date] = None
-    for_month: Optional[int] = None
-    for_year: Optional[int] = None
+    for_month: Optional[int] = Field(None, ge=1, le=12)
+    for_year: Optional[int] = Field(None, ge=2000, le=2200)
     payment_method: Optional[PaymentMethod] = None
     notes: Optional[str] = None
 

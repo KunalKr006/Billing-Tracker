@@ -5,6 +5,7 @@ from typing import List, Optional
 from app.database import get_db
 from app.models.work_entry import WorkEntry, WorkStatus
 from app.models.category import Category
+from app.models.client import Client
 from app.schemas.work_entry import WorkEntryCreate, WorkEntryUpdate, WorkEntryResponse
 from decimal import Decimal
 
@@ -45,6 +46,9 @@ def list_work(
 
 @router.post("", response_model=WorkEntryResponse, status_code=201)
 def create_work(payload: WorkEntryCreate, db: Session = Depends(get_db)):
+    if not db.query(Client).filter(Client.id == payload.client_id).first():
+        raise HTTPException(status_code=404, detail="Client not found")
+
     # Auto-fill rate from category's current default_rate if not provided
     rate = payload.rate
     if rate is None:
@@ -88,7 +92,12 @@ def update_work(work_id: int, payload: WorkEntryUpdate, db: Session = Depends(ge
     entry = db.query(WorkEntry).filter(WorkEntry.id == work_id).first()
     if not entry:
         raise HTTPException(status_code=404, detail="Work entry not found")
-    for field, value in payload.model_dump(exclude_unset=True).items():
+    changes = payload.model_dump(exclude_unset=True)
+    if "client_id" in changes and not db.query(Client).filter(Client.id == changes["client_id"]).first():
+        raise HTTPException(status_code=404, detail="Client not found")
+    if "category_id" in changes and not db.query(Category).filter(Category.id == changes["category_id"]).first():
+        raise HTTPException(status_code=404, detail="Category not found")
+    for field, value in changes.items():
         setattr(entry, field, value)
     db.commit()
     db.refresh(entry)
