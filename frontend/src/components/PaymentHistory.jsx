@@ -1,4 +1,4 @@
-import { Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { formatINR, MONTHS } from '../services/api';
 
 const METHOD_LABELS = {
@@ -8,7 +8,7 @@ const METHOD_LABELS = {
   other: 'Other',
 };
 
-export default function PaymentHistory({ payments = [], onDelete }) {
+export default function PaymentHistory({ payments = [], onDelete, onEdit }) {
   if (!payments.length) {
     return (
       <div className="empty-state" style={{ padding: '30px 0' }}>
@@ -37,7 +37,7 @@ export default function PaymentHistory({ payments = [], onDelete }) {
               <th>Amount</th>
               <th>Method</th>
               <th>Notes</th>
-              {onDelete && <th>Actions</th>}
+              {(onDelete || onEdit) && <th>Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -48,8 +48,9 @@ export default function PaymentHistory({ payments = [], onDelete }) {
                 <td><strong style={{ color: 'var(--green)' }}>{formatINR(p.amount)}</strong></td>
                 <td><span className="badge badge-blue">{METHOD_LABELS[p.payment_method] || p.payment_method}</span></td>
                 <td style={{ color: 'var(--text-3)', fontSize: '0.8rem' }}>{p.notes || '—'}</td>
-                {onDelete && (
+                {(onDelete || onEdit) && (
                   <td>
+                    {onEdit && <button className="btn btn-ghost btn-xs btn-icon" onClick={() => onEdit(p.id)} title="Edit payment"><Pencil size={13} /></button>}
                     <button className="btn btn-danger btn-xs btn-icon" onClick={() => onDelete(p.id)} title="Delete payment">
                       <Trash2 size={13} />
                     </button>
@@ -78,8 +79,9 @@ export default function PaymentHistory({ payments = [], onDelete }) {
               <span className="badge badge-gray">For: {getForMonthLabel(p)}</span>
               {p.notes && <span style={{ fontSize: '0.78rem', color: 'var(--text-3)' }}>{p.notes}</span>}
             </div>
-            {onDelete && (
+            {(onDelete || onEdit) && (
               <div className="mobile-entry-footer" style={{ justifyContent: 'flex-end' }}>
+                {onEdit && <button className="btn btn-secondary btn-xs" onClick={() => onEdit(p.id)}><Pencil size={12} /> Edit</button>}
                 <button className="btn btn-danger btn-xs" onClick={() => onDelete(p.id)}>
                   <Trash2 size={12} /> Delete
                 </button>

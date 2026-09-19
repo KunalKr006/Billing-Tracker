@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { categoriesAPI, formatINR } from '../services/api';
+import CustomSelect from './CustomSelect';
 
 const STATUS_OPTIONS = [
   { value: 'completed', label: 'Completed' },
@@ -64,7 +65,7 @@ export default function WorkForm({ isOpen, onClose, onSubmit, clients = [], init
   }, [categories, isOpen, initialData, form.category_id]);
 
   const handleCategoryChange = (catId) => {
-    const cat = categories.find(c => c.id === Number(catId));
+    const cat = categories.find(c => String(c.id) === String(catId));
     setForm(f => ({ ...f, category_id: catId, rate: cat ? cat.default_rate : '' }));
     setAutoRate(cat ? cat.default_rate : null);
   };
@@ -87,8 +88,8 @@ export default function WorkForm({ isOpen, onClose, onSubmit, clients = [], init
     setLoading(true);
     try {
       await onSubmit({
-        client_id: Number(form.client_id),
-        category_id: Number(form.category_id),
+        client_id: form.client_id,
+        category_id: form.category_id,
         title: form.title.trim(),
         work_date: form.work_date,
         rate: parseFloat(form.rate),
@@ -123,29 +124,13 @@ export default function WorkForm({ isOpen, onClose, onSubmit, clients = [], init
             <div className="form-row">
               <div className="form-group">
                 <label htmlFor="work-client" className="form-label">Client *</label>
-                <select
-                  id="work-client"
-                  className="form-select"
-                  value={form.client_id}
-                  onChange={e => setForm(f => ({ ...f, client_id: e.target.value }))}
-                >
-                  <option value="">Select client</option>
-                  {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+                <CustomSelect value={form.client_id} onChange={value => setForm(f => ({ ...f, client_id: value }))} options={clients.map(client => ({ value: client.id, label: client.name }))} placeholder="Select client" ariaLabel="Client" />
                 {errors.client_id && <div className="form-error">{errors.client_id}</div>}
               </div>
 
               <div className="form-group">
                 <label htmlFor="work-category" className="form-label">Category *</label>
-                <select
-                  id="work-category"
-                  className="form-select"
-                  value={form.category_id}
-                  onChange={e => handleCategoryChange(e.target.value)}
-                >
-                  <option value="">Select category</option>
-                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+                <CustomSelect value={form.category_id} onChange={handleCategoryChange} options={categories.map(category => ({ value: category.id, label: category.name }))} placeholder="Select category" ariaLabel="Category" />
                 {errors.category_id && <div className="form-error">{errors.category_id}</div>}
               </div>
             </div>
@@ -198,14 +183,7 @@ export default function WorkForm({ isOpen, onClose, onSubmit, clients = [], init
 
             <div className="form-group">
               <label htmlFor="work-status" className="form-label">Status</label>
-              <select
-                id="work-status"
-                className="form-select"
-                value={form.status}
-                onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
-              >
-                {STATUS_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-              </select>
+              <CustomSelect value={form.status} onChange={value => setForm(f => ({ ...f, status: value }))} options={STATUS_OPTIONS} ariaLabel="Status" />
             </div>
 
             <div className="form-group">

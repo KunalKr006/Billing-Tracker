@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { MONTHS } from '../services/api';
 import { ChevronLeft, ChevronRight, Calendar, X } from 'lucide-react';
+import CustomSelect from './CustomSelect';
 
 export default function MonthSelector({ month, year, onMonthChange, onYearChange }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -32,16 +33,8 @@ export default function MonthSelector({ month, year, onMonthChange, onYearChange
         <button className="btn btn-ghost btn-icon" style={{ padding: 4 }} onClick={handlePrev} title="Previous month">
           <ChevronLeft size={16} />
         </button>
-        <select value={month} onChange={e => onMonthChange(Number(e.target.value))}>
-          {MONTHS.map((m, i) => (
-            <option key={i + 1} value={i + 1}>{m}</option>
-          ))}
-        </select>
-        <select value={year} onChange={e => onYearChange(Number(e.target.value))}>
-          {years.map(y => (
-            <option key={y} value={y}>{y}</option>
-          ))}
-        </select>
+        <CustomSelect value={month} onChange={value => onMonthChange(Number(value))} options={MONTHS.map((label, index) => ({ value: index + 1, label }))} className="month-select" />
+        <CustomSelect value={year} onChange={value => onYearChange(Number(value))} options={years.map(value => ({ value, label: value }))} className="year-select" />
         <button className="btn btn-ghost btn-icon" style={{ padding: 4 }} onClick={handleNext} title="Next month">
           <ChevronRight size={16} />
         </button>
@@ -85,28 +78,12 @@ export default function MonthSelector({ month, year, onMonthChange, onYearChange
               <div className="form-row">
                 <div className="form-group">
                   <label className="form-label">Month</label>
-                  <select
-                    className="form-select"
-                    value={month}
-                    onChange={e => onMonthChange(Number(e.target.value))}
-                  >
-                    {MONTHS.map((m, i) => (
-                      <option key={i + 1} value={i + 1}>{m}</option>
-                    ))}
-                  </select>
+                  <CustomSelect value={month} onChange={value => onMonthChange(Number(value))} options={MONTHS.map((label, index) => ({ value: index + 1, label }))} />
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">Year</label>
-                  <select
-                    className="form-select"
-                    value={year}
-                    onChange={e => onYearChange(Number(e.target.value))}
-                  >
-                    {years.map(y => (
-                      <option key={y} value={y}>{y}</option>
-                    ))}
-                  </select>
+                  <CustomSelect value={year} onChange={value => onYearChange(Number(value))} options={years.map(value => ({ value, label: value }))} />
                 </div>
               </div>
             </div>

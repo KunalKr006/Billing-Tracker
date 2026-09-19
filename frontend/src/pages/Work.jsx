@@ -6,6 +6,7 @@ import WorkForm from '../components/WorkForm';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { workAPI, clientsAPI, categoriesAPI, MONTHS } from '../services/api';
 import { useToast } from '../components/Toast';
+import CustomSelect from '../components/CustomSelect';
 
 const STATUS_OPTIONS = ['completed', 'pending', 'cancelled'];
 
@@ -118,30 +119,15 @@ export default function Work({ sidebarOpen, setSidebarOpen }) {
             />
           </div>
 
-          <select className="filter-select" value={filterClient} onChange={e => setFilterClient(e.target.value)}>
-            <option value="">All Clients</option>
-            {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
+          <CustomSelect className="filter-select" value={filterClient} onChange={setFilterClient} options={[{ value: '', label: 'All Clients' }, ...clients.map(client => ({ value: client.id, label: client.name }))]} />
 
-          <select className="filter-select" value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
-            <option value="">All Categories</option>
-            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
+          <CustomSelect className="filter-select" value={filterCategory} onChange={setFilterCategory} options={[{ value: '', label: 'All Categories' }, ...categories.map(category => ({ value: category.id, label: category.name }))]} />
 
-          <select className="filter-select" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-            <option value="">All Status</option>
-            {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
-          </select>
+          <CustomSelect className="filter-select" value={filterStatus} onChange={setFilterStatus} options={[{ value: '', label: 'All Status' }, ...STATUS_OPTIONS.map(value => ({ value, label: value.charAt(0).toUpperCase() + value.slice(1) }))]} />
 
-          <select className="filter-select" value={filterMonth} onChange={e => setFilterMonth(e.target.value)}>
-            <option value="">All Months</option>
-            {MONTHS.map((m, i) => <option key={i + 1} value={i + 1}>{m}</option>)}
-          </select>
+          <CustomSelect className="filter-select" value={filterMonth} onChange={setFilterMonth} options={[{ value: '', label: 'All Months' }, ...MONTHS.map((label, index) => ({ value: index + 1, label }))]} />
 
-          <select className="filter-select" value={filterYear} onChange={e => setFilterYear(e.target.value)}>
-            <option value="">All Years</option>
-            {years.map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
+          <CustomSelect className="filter-select" value={filterYear} onChange={setFilterYear} options={[{ value: '', label: 'All Years' }, ...years.map(value => ({ value, label: value }))]} />
 
           <button className="btn btn-secondary btn-sm" onClick={handleClearFilters}>
             Clear
@@ -191,43 +177,28 @@ export default function Work({ sidebarOpen, setSidebarOpen }) {
               <div className="modal-body">
                 <div className="form-group">
                   <label className="form-label">Client</label>
-                  <select className="form-select" value={filterClient} onChange={e => setFilterClient(e.target.value)}>
-                    <option value="">All Clients</option>
-                    {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+                  <CustomSelect className="form-select" value={filterClient} onChange={setFilterClient} options={[{ value: '', label: 'All Clients' }, ...clients.map(client => ({ value: client.id, label: client.name }))]} />
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">Category</label>
-                  <select className="form-select" value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
-                    <option value="">All Categories</option>
-                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+                  <CustomSelect className="form-select" value={filterCategory} onChange={setFilterCategory} options={[{ value: '', label: 'All Categories' }, ...categories.map(category => ({ value: category.id, label: category.name }))]} />
                 </div>
 
                 <div className="form-group">
                   <label className="form-label">Status</label>
-                  <select className="form-select" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-                    <option value="">All Status</option>
-                    {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
-                  </select>
+                  <CustomSelect className="form-select" value={filterStatus} onChange={setFilterStatus} options={[{ value: '', label: 'All Status' }, ...STATUS_OPTIONS.map(value => ({ value, label: value.charAt(0).toUpperCase() + value.slice(1) }))]} />
                 </div>
 
                 <div className="form-row">
                   <div className="form-group">
                     <label className="form-label">Month</label>
-                    <select className="form-select" value={filterMonth} onChange={e => setFilterMonth(e.target.value)}>
-                      <option value="">All Months</option>
-                      {MONTHS.map((m, i) => <option key={i + 1} value={i + 1}>{m}</option>)}
-                    </select>
+                    <CustomSelect className="form-select" value={filterMonth} onChange={setFilterMonth} options={[{ value: '', label: 'All Months' }, ...MONTHS.map((label, index) => ({ value: index + 1, label }))]} />
                   </div>
 
                   <div className="form-group">
                     <label className="form-label">Year</label>
-                    <select className="form-select" value={filterYear} onChange={e => setFilterYear(e.target.value)}>
-                      <option value="">All Years</option>
-                      {years.map(y => <option key={y} value={y}>{y}</option>)}
-                    </select>
+                    <CustomSelect className="form-select" value={filterYear} onChange={setFilterYear} options={[{ value: '', label: 'All Years' }, ...years.map(value => ({ value, label: value }))]} />
                   </div>
                 </div>
               </div>

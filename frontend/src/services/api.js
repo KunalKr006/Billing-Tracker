@@ -59,10 +59,17 @@ export const paymentsAPI = {
   delete: (id) => api.delete(`/api/payments/${id}`),
 };
 
+export const additionalBillsAPI = {
+  create: (data) => api.post('/api/additional-bills', data),
+  update: (id, data) => api.put(`/api/additional-bills/${id}`, data),
+  delete: (id) => api.delete(`/api/additional-bills/${id}`),
+};
+
 // ─── Billing ──────────────────────────────────────────────────────────────────
 export const billingAPI = {
   get: (clientId, year, month) => api.get(`/api/billing/${clientId}/${year}/${month}`),
   history: (clientId) => api.get(`/api/billing/${clientId}/history`),
+  delete: (clientId, year, month) => api.delete(`/api/billing/${clientId}/${year}/${month}`),
 };
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────

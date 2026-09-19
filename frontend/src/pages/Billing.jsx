@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Plus, Copy, Check } from 'lucide-react';
+import { Plus, Copy, Check, Pencil, Trash2 } from 'lucide-react';
 import Header from '../components/Header';
-import PaymentForm from '../components/PaymentForm';
-import PaymentHistory from '../components/PaymentHistory';
+import AdditionalBillForm from '../components/AdditionalBillForm';
+import WorkForm from '../components/WorkForm';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { billingAPI, clientsAPI, paymentsAPI, formatINR, MONTHS } from '../services/api';
+import { additionalBillsAPI, billingAPI, clientsAPI, formatINR, MONTHS, workAPI } from '../services/api';
 import { useToast } from '../components/Toast';
 
 export default function Billing({ sidebarOpen, setSidebarOpen }) {
@@ -16,8 +16,13 @@ export default function Billing({ sidebarOpen, setSidebarOpen }) {
   const [selectedClient, setSelectedClient] = useState(null);
   const [billing, setBilling] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [showPaymentForm, setShowPaymentForm] = useState(false);
-  const [deletePayment, setDeletePayment] = useState(null);
+  const [showAdditionalBillForm, setShowAdditionalBillForm] = useState(false);
+  const [deleteAdditionalBill, setDeleteAdditionalBill] = useState(null);
+  const [editAdditionalBill, setEditAdditionalBill] = useState(null);
+  const [deleteWorkEntry, setDeleteWorkEntry] = useState(null);
+  const [editWorkEntry, setEditWorkEntry] = useState(null);
+  const [deleteBill, setDeleteBill] = useState(false);
+  const [showClientSelector, setShowClientSelector] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -40,16 +45,49 @@ export default function Billing({ sidebarOpen, setSidebarOpen }) {
       .finally(() => setLoading(false));
   };
 
-  const handleAddPayment = async (data) => {
-    await paymentsAPI.create(data);
-    toast('Payment recorded.');
+  const handleAddAdditionalBill = async (data) => {
+    if (editAdditionalBill) {
+      await additionalBillsAPI.update(editAdditionalBill.id, data);
+      setEditAdditionalBill(null);
+      toast('Additional bill updated.');
+    } else {
+      await additionalBillsAPI.create({ ...data, client_id: selectedClient });
+      toast('Additional bill added.');
+    }
+    setShowAdditionalBillForm(false);
     fetchBilling();
   };
 
-  const handleDeletePayment = async () => {
-    await paymentsAPI.delete(deletePayment);
-    toast('Payment deleted.');
-    setDeletePayment(null);
+  const handleDeleteAdditionalBill = async () => {
+    await additionalBillsAPI.delete(deleteAdditionalBill);
+    setDeleteAdditionalBill(null);
+    toast('Additional bill deleted.');
+    fetchBilling();
+  };
+
+  const handleDeleteWorkEntry = async () => {
+    await workAPI.delete(deleteWorkEntry);
+    setDeleteWorkEntry(null);
+    toast('Billed work deleted.');
+    fetchBilling();
+  };
+
+  const handleEditWorkEntry = async (entryId) => {
+    const response = await workAPI.get(entryId);
+    setEditWorkEntry(response.data);
+  };
+
+  const handleUpdateWorkEntry = async (data) => {
+    await workAPI.update(editWorkEntry.id, data);
+    setEditWorkEntry(null);
+    toast('Billed work updated.');
+    fetchBilling();
+  };
+
+  const handleDeleteBill = async () => {
+    await billingAPI.delete(selectedClient, year, month);
+    setDeleteBill(false);
+    toast('Monthly bill deleted.');
     fetchBilling();
   };
 
@@ -109,20 +147,44 @@ export default function Billing({ sidebarOpen, setSidebarOpen }) {
         {/* Controls */}
         <div className="page-header">
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-            <select
-              className="filter-select"
-              value={selectedClient || ''}
-              onChange={e => setSelectedClient(Number(e.target.value))}
-            >
-              {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+            <div className="custom-select-wrap">
+              <button
+                type="button"
+                className="filter-select custom-select-trigger"
+                onClick={() => setShowClientSelector(open => !open)}
+                aria-haspopup="listbox"
+                aria-expanded={showClientSelector}
+              >
+                {clients.find(client => client.id === selectedClient)?.name || 'Select client'}
+              </button>
+              {showClientSelector && (
+                <div className="custom-select-menu" role="listbox">
+                  {clients.map(client => (
+                    <button
+                      type="button"
+                      className="custom-select-option"
+                      key={client.id}
+                      onClick={() => {
+                        setSelectedClient(client.id);
+                        setShowClientSelector(false);
+                      }}
+                    >
+                      {client.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button className="btn btn-secondary" onClick={handleCopy} disabled={!billing}>
               {copied ? <><Check size={15} /> Copied!</> : <><Copy size={15} /> Copy Bill</>}
             </button>
-            <button className="btn btn-primary" onClick={() => setShowPaymentForm(true)}>
-              <Plus size={15} /> Add Payment
+            <button className="btn btn-primary" onClick={() => setShowAdditionalBillForm(true)} disabled={!selectedClient}>
+              <Plus size={15} /> Add Bills
+            </button>
+            <button className="btn btn-danger" onClick={() => setDeleteBill(true)} disabled={!selectedClient}>
+              <Trash2 size={15} /> Delete Bill
             </button>
           </div>
         </div>
@@ -140,7 +202,16 @@ export default function Billing({ sidebarOpen, setSidebarOpen }) {
           <div className="billing-grid">
             {/* Bill */}
             <div className="billing-summary">
-              <div className="billing-title">{billing.month_name} {billing.year}</div>
+              <div className="billing-title-row">
+                <div className="billing-title">{billing.month_name} {billing.year}</div>
+                <button
+                  type="button"
+                  className="btn btn-danger btn-xs"
+                  onClick={() => setDeleteBill(true)}
+                >
+                  <Trash2 size={13} /> Delete Bill
+                </button>
+              </div>
 
               {billing.categories.map(cat => (
                 <div key={cat.category_id} className="billing-category">
@@ -150,6 +221,17 @@ export default function Billing({ sidebarOpen, setSidebarOpen }) {
                       <li key={i}>
                         <span className="li-num">{i + 1}.</span>
                         {title}
+                        <button
+                          type="button"
+                          className="btn btn-danger btn-xs btn-icon"
+                          onClick={() => setDeleteWorkEntry(cat.entry_ids[i])}
+                          aria-label={`Delete ${title}`}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                        <button type="button" className="btn btn-ghost btn-xs btn-icon" onClick={() => handleEditWorkEntry(cat.entry_ids[i])} aria-label={`Edit ${title}`}>
+                          <Pencil size={13} />
+                        </button>
                       </li>
                     ))}
                   </ul>
@@ -163,6 +245,32 @@ export default function Billing({ sidebarOpen, setSidebarOpen }) {
               {billing.categories.length === 0 && (
                 <div className="empty-state" style={{ padding: '20px 0' }}>
                   <p>No completed work entries this month.</p>
+                </div>
+              )}
+
+              {billing.additional_bills?.length > 0 && (
+                <div className="billing-category">
+                  <div className="billing-cat-name">Additional Costs</div>
+                  <ul className="billing-cat-list">
+                    {billing.additional_bills.map(bill => (
+                      <li key={bill.id}>
+                        <span className="li-num">+</span>
+                        {bill.title}
+                        <span style={{ marginLeft: 'auto' }}>{formatINR(bill.amount)}</span>
+                        <button
+                          type="button"
+                          className="btn btn-danger btn-xs btn-icon"
+                          onClick={() => setDeleteAdditionalBill(bill.id)}
+                          aria-label={`Delete ${bill.title}`}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                        <button type="button" className="btn btn-ghost btn-xs btn-icon" onClick={() => { setEditAdditionalBill(bill); setShowAdditionalBillForm(true); }} aria-label={`Edit ${bill.title}`}>
+                          <Pencil size={13} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
 
@@ -182,23 +290,7 @@ export default function Billing({ sidebarOpen, setSidebarOpen }) {
               </div>
             </div>
 
-            {/* Payment panel */}
-            <div>
-              <div className="card">
-                <div className="card-header">
-                  <div className="card-title">Payments</div>
-                  <button className="btn btn-primary btn-sm" onClick={() => setShowPaymentForm(true)}>
-                    <Plus size={13} /> Add
-                  </button>
-                </div>
-                <PaymentHistory
-                  payments={billing.payments}
-                  onDelete={id => setDeletePayment(id)}
-                />
-              </div>
-
-              {/* Summary box */}
-              <div className="card" style={{ marginTop: 14 }}>
+            <div className="card">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ fontSize: '0.82rem', color: 'var(--text-3)' }}>Total entries</span>
@@ -222,26 +314,43 @@ export default function Billing({ sidebarOpen, setSidebarOpen }) {
                     </span>
                   </div>
                 </div>
-              </div>
             </div>
           </div>
         )}
-
-        <PaymentForm
-          isOpen={showPaymentForm}
-          onClose={() => setShowPaymentForm(false)}
-          onSubmit={handleAddPayment}
+        <AdditionalBillForm
+          isOpen={showAdditionalBillForm}
+          onClose={() => { setShowAdditionalBillForm(false); setEditAdditionalBill(null); }}
+          onSubmit={handleAddAdditionalBill}
+          defaultDate={`${year}-${String(month).padStart(2, '0')}-01`}
+          initial={editAdditionalBill}
+        />
+        <WorkForm
+          isOpen={!!editWorkEntry}
+          onClose={() => setEditWorkEntry(null)}
+          onSubmit={handleUpdateWorkEntry}
           clients={clients}
-          defaultClientId={selectedClient}
-          defaultMonth={month}
-          defaultYear={year}
+          initialData={editWorkEntry}
         />
         <ConfirmDialog
-          isOpen={!!deletePayment}
-          title="Delete Payment"
-          message="Are you sure you want to delete this payment record?"
-          onConfirm={handleDeletePayment}
-          onCancel={() => setDeletePayment(null)}
+          isOpen={!!deleteAdditionalBill}
+          title="Delete Additional Bill"
+          message="Are you sure you want to delete this additional bill?"
+          onConfirm={handleDeleteAdditionalBill}
+          onCancel={() => setDeleteAdditionalBill(null)}
+        />
+        <ConfirmDialog
+          isOpen={!!deleteWorkEntry}
+          title="Delete Billed Work"
+          message="Are you sure you want to delete this work from the bill?"
+          onConfirm={handleDeleteWorkEntry}
+          onCancel={() => setDeleteWorkEntry(null)}
+        />
+        <ConfirmDialog
+          isOpen={deleteBill}
+          title="Delete Monthly Bill"
+          message={`Delete all billed work and additional costs for ${MONTHS[month - 1]} ${year}?`}
+          onConfirm={handleDeleteBill}
+          onCancel={() => setDeleteBill(false)}
         />
       </div>
     </>

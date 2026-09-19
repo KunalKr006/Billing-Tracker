@@ -6,6 +6,7 @@ import PaymentHistory from '../components/PaymentHistory';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { paymentsAPI, clientsAPI, formatINR, MONTHS } from '../services/api';
 import { useToast } from '../components/Toast';
+import CustomSelect from '../components/CustomSelect';
 
 export default function Payments({ sidebarOpen, setSidebarOpen }) {
   const toast = useToast();
@@ -16,6 +17,7 @@ export default function Payments({ sidebarOpen, setSidebarOpen }) {
   const [showForm, setShowForm] = useState(false);
   const [showMobileFilter, setShowMobileFilter] = useState(false);
   const [deletePayment, setDeletePayment] = useState(null);
+  const [editPayment, setEditPayment] = useState(null);
   const [filterClient, setFilterClient] = useState('');
   const [filterMonth, setFilterMonth] = useState('');
   const [filterYear, setFilterYear] = useState('');
@@ -39,8 +41,14 @@ export default function Payments({ sidebarOpen, setSidebarOpen }) {
   useEffect(() => { fetchPayments(); }, [filterClient, filterMonth, filterYear]);
 
   const handleAdd = async (data) => {
-    await paymentsAPI.create(data);
-    toast('Payment recorded.');
+    if (editPayment) {
+      await paymentsAPI.update(editPayment.id, data);
+      setEditPayment(null);
+      toast('Payment updated.');
+    } else {
+      await paymentsAPI.create(data);
+      toast('Payment recorded.');
+    }
     fetchPayments();
   };
 
@@ -78,18 +86,9 @@ export default function Payments({ sidebarOpen, setSidebarOpen }) {
 
         {/* Desktop Filters Bar */}
         <div className="filters-bar desktop-filters-only">
-          <select className="filter-select" value={filterClient} onChange={e => setFilterClient(e.target.value)}>
-            <option value="">All Clients</option>
-            {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-          <select className="filter-select" value={filterMonth} onChange={e => setFilterMonth(e.target.value)}>
-            <option value="">All Months</option>
-            {MONTHS.map((m, i) => <option key={i + 1} value={i + 1}>{m}</option>)}
-          </select>
-          <select className="filter-select" value={filterYear} onChange={e => setFilterYear(e.target.value)}>
-            <option value="">All Years</option>
-            {years.map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
+          <CustomSelect className="filter-select" value={filterClient} onChange={setFilterClient} options={[{ value: '', label: 'All Clients' }, ...clients.map(client => ({ value: client.id, label: client.name }))]} />
+          <CustomSelect className="filter-select" value={filterMonth} onChange={setFilterMonth} options={[{ value: '', label: 'All Months' }, ...MONTHS.map((label, index) => ({ value: index + 1, label }))]} />
+          <CustomSelect className="filter-select" value={filterYear} onChange={setFilterYear} options={[{ value: '', label: 'All Years' }, ...years.map(value => ({ value, label: value }))]} />
           <button className="btn btn-secondary btn-sm" onClick={handleClearFilters}>Clear</button>
         </div>
 
@@ -126,27 +125,18 @@ export default function Payments({ sidebarOpen, setSidebarOpen }) {
               <div className="modal-body">
                 <div className="form-group">
                   <label className="form-label">Client</label>
-                  <select className="form-select" value={filterClient} onChange={e => setFilterClient(e.target.value)}>
-                    <option value="">All Clients</option>
-                    {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+                  <CustomSelect className="form-select" value={filterClient} onChange={setFilterClient} options={[{ value: '', label: 'All Clients' }, ...clients.map(client => ({ value: client.id, label: client.name }))]} />
                 </div>
 
                 <div className="form-row">
                   <div className="form-group">
                     <label className="form-label">Month</label>
-                    <select className="form-select" value={filterMonth} onChange={e => setFilterMonth(e.target.value)}>
-                      <option value="">All Months</option>
-                      {MONTHS.map((m, i) => <option key={i + 1} value={i + 1}>{m}</option>)}
-                    </select>
+                    <CustomSelect className="form-select" value={filterMonth} onChange={setFilterMonth} options={[{ value: '', label: 'All Months' }, ...MONTHS.map((label, index) => ({ value: index + 1, label }))]} />
                   </div>
 
                   <div className="form-group">
                     <label className="form-label">Year</label>
-                    <select className="form-select" value={filterYear} onChange={e => setFilterYear(e.target.value)}>
-                      <option value="">All Years</option>
-                      {years.map(y => <option key={y} value={y}>{y}</option>)}
-                    </select>
+                    <CustomSelect className="form-select" value={filterYear} onChange={setFilterYear} options={[{ value: '', label: 'All Years' }, ...years.map(value => ({ value, label: value }))]} />
                   </div>
                 </div>
               </div>
@@ -176,15 +166,16 @@ export default function Payments({ sidebarOpen, setSidebarOpen }) {
           {loading ? (
             <div className="loading"><div className="spinner" /> Loading...</div>
           ) : (
-            <PaymentHistory payments={payments} onDelete={id => setDeletePayment(id)} />
+            <PaymentHistory payments={payments} onEdit={id => { setEditPayment(payments.find(payment => payment.id === id)); setShowForm(true); }} onDelete={id => setDeletePayment(id)} />
           )}
         </div>
 
         <PaymentForm
           isOpen={showForm}
-          onClose={() => setShowForm(false)}
+          onClose={() => { setShowForm(false); setEditPayment(null); }}
           onSubmit={handleAdd}
           clients={clients}
+          initial={editPayment}
         />
         <ConfirmDialog
           isOpen={!!deletePayment}

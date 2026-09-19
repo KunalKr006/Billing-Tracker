@@ -8,6 +8,7 @@ import WorkForm from '../components/WorkForm';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { dashboardAPI, clientsAPI, workAPI, formatINR } from '../services/api';
 import { useToast } from '../components/Toast';
+import CustomSelect from '../components/CustomSelect';
 
 export default function Dashboard({ sidebarOpen, setSidebarOpen }) {
   const toast = useToast();
@@ -88,13 +89,7 @@ export default function Dashboard({ sidebarOpen, setSidebarOpen }) {
         {/* Client selector */}
         {clients.length > 1 && (
           <div style={{ marginBottom: 20 }}>
-            <select
-              className="filter-select"
-              value={selectedClient || ''}
-              onChange={e => setSelectedClient(Number(e.target.value))}
-            >
-              {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+            <CustomSelect className="filter-select" value={selectedClient || ''} onChange={setSelectedClient} options={clients.map(client => ({ value: client.id, label: client.name }))} placeholder="Select client" ariaLabel="Client" />
           </div>
         )}
 

@@ -580,6 +580,37 @@ tbody td strong { color: var(--text); }
 
 .form-hint { font-size: 0.75rem; color: var(--text-3); margin-top: 4px; }
 
+.custom-select-wrap { position: relative; width: 100%; }
+.custom-select-trigger { text-align: left; cursor: pointer; }
+.custom-select-menu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 190px;
+  overflow-y: auto;
+  padding: 4px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg);
+}
+.custom-select-option {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.custom-select-option:hover,
+.custom-select-option:focus-visible { background: var(--primary-glow); color: var(--text); }
+
 /* ── Modal ───────────────────────────────────────────────────────────────── */
 .modal-overlay {
   position: fixed;
@@ -1150,6 +1181,8 @@ tbody td strong { color: var(--text); }
   .form-select,
   .form-textarea {
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
     font-size: 16px;
   }
   .filter-select {
@@ -1162,12 +1195,26 @@ tbody td strong { color: var(--text); }
     font-size: 1.08rem;
     letter-spacing: 0.8px;
   }
+
+  .billing-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
   .modal-overlay {
     padding: 10px;
   }
   .modal {
     max-height: 95vh;
     border-radius: var(--r-lg);
+    min-width: 0;
+    max-width: calc(100vw - 20px);
+  }
+  .modal * {
+    min-width: 0;
+    max-width: 100%;
   }
   .modal-header, .modal-body, .modal-footer {
     padding-left: 16px;

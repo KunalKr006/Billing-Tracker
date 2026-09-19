@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Trash2 } from 'lucide-react';
 import Header from '../components/Header';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { billingAPI, clientsAPI, formatINR } from '../services/api';
+import CustomSelect from '../components/CustomSelect';
 
 const STATUS_CONFIG = {
   paid:           { label: 'PAID',           cls: 'badge-green' },
@@ -16,6 +18,7 @@ export default function History({ setSidebarOpen }) {
   const [selectedClient, setSelectedClient] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   useEffect(() => {
     clientsAPI.list().then(r => {
@@ -38,6 +41,16 @@ export default function History({ setSidebarOpen }) {
     navigate('/billing', { state: { month: item.month, year: item.year, clientId: selectedClient } });
   };
 
+  const handleDelete = async () => {
+    await billingAPI.delete(selectedClient, deleteTarget.year, deleteTarget.month);
+    setDeleteTarget(null);
+    setLoading(true);
+    billingAPI.history(selectedClient)
+      .then(r => setHistory(r.data))
+      .catch(() => setHistory([]))
+      .finally(() => setLoading(false));
+  };
+
   return (
     <>
       <Header title="History" subtitle="Monthly billing history" onMenuToggle={() => setSidebarOpen(o => !o)} />
@@ -48,13 +61,7 @@ export default function History({ setSidebarOpen }) {
             <p>All months with work or payments</p>
           </div>
           {clients.length > 1 && (
-            <select
-              className="filter-select"
-              value={selectedClient || ''}
-              onChange={e => setSelectedClient(Number(e.target.value))}
-            >
-              {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+            <CustomSelect className="filter-select" value={selectedClient || ''} onChange={setSelectedClient} options={clients.map(client => ({ value: client.id, label: client.name }))} placeholder="Select client" ariaLabel="Client" />
           )}
         </div>
 
@@ -80,6 +87,17 @@ export default function History({ setSidebarOpen }) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span className={`badge ${sc.cls}`}>{sc.label}</span>
                       <ChevronRight size={16} style={{ color: 'var(--text-3)' }} />
+                      <button
+                        type="button"
+                        className="btn btn-danger btn-xs btn-icon"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setDeleteTarget(item);
+                        }}
+                        aria-label={`Delete ${item.month_name} ${item.year} bill`}
+                      >
+                        <Trash2 size={13} />
+                      </button>
                     </div>
                   </div>
                   <div className="history-stats">
@@ -107,6 +125,13 @@ export default function History({ setSidebarOpen }) {
             })}
           </div>
         )}
+        <ConfirmDialog
+          isOpen={!!deleteTarget}
+          title="Delete Monthly Bill"
+          message={deleteTarget ? `Delete the ${deleteTarget.month_name} ${deleteTarget.year} bill?` : ''}
+          onConfirm={handleDelete}
+          onCancel={() => setDeleteTarget(null)}
+        />
       </div>
     </>
   );
