@@ -8,7 +8,6 @@ import WorkForm from '../components/WorkForm';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { dashboardAPI, clientsAPI, workAPI, formatINR } from '../services/api';
 import { useToast } from '../components/Toast';
-import CustomSelect from '../components/CustomSelect';
 
 export default function Dashboard({ sidebarOpen, setSidebarOpen }) {
   const toast = useToast();
@@ -19,9 +18,6 @@ export default function Dashboard({ sidebarOpen, setSidebarOpen }) {
   const [selectedClient, setSelectedClient] = useState(null);
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showWorkForm, setShowWorkForm] = useState(false);
-  const [editEntry, setEditEntry] = useState(null);
-  const [deleteEntry, setDeleteEntry] = useState(null);
 
   useEffect(() => {
     clientsAPI.list().then(r => {
@@ -89,7 +85,13 @@ export default function Dashboard({ sidebarOpen, setSidebarOpen }) {
         {/* Client selector */}
         {clients.length > 1 && (
           <div style={{ marginBottom: 20 }}>
-            <CustomSelect className="filter-select" value={selectedClient || ''} onChange={setSelectedClient} options={clients.map(client => ({ value: client.id, label: client.name }))} placeholder="Select client" ariaLabel="Client" />
+            <select
+              className="filter-select"
+              value={selectedClient || ''}
+              onChange={e => setSelectedClient(Number(e.target.value))}
+            >
+              {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
           </div>
         )}
 
@@ -134,19 +136,6 @@ export default function Dashboard({ sidebarOpen, setSidebarOpen }) {
 
             <CategoryBreakdown categories={dashboard.categories} />
 
-            <div className="card">
-              <div className="card-header">
-                <div className="card-title">Recent Work</div>
-                <button className="btn btn-primary btn-sm" onClick={() => setShowWorkForm(true)}>
-                  <Plus size={15} /> Add Work
-                </button>
-              </div>
-              <WorkTable
-                entries={recentWork}
-                onEdit={(e) => setEditEntry(e)}
-                onDelete={(e) => setDeleteEntry(e)}
-              />
-            </div>
           </>
         )}
 
@@ -158,27 +147,6 @@ export default function Dashboard({ sidebarOpen, setSidebarOpen }) {
           </div>
         )}
 
-        <WorkForm
-          isOpen={showWorkForm}
-          onClose={() => setShowWorkForm(false)}
-          onSubmit={handleAddWork}
-          clients={clients}
-          defaultClientId={selectedClient}
-        />
-        <WorkForm
-          isOpen={!!editEntry}
-          onClose={() => setEditEntry(null)}
-          onSubmit={handleEditWork}
-          clients={clients}
-          initialData={editEntry}
-        />
-        <ConfirmDialog
-          isOpen={!!deleteEntry}
-          title="Delete Work Entry"
-          message={`Are you sure you want to delete "${deleteEntry?.title}"? This cannot be undone.`}
-          onConfirm={handleDeleteWork}
-          onCancel={() => setDeleteEntry(null)}
-        />
       </div>
     </>
   );
